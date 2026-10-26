@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f7f3ee; direction: rtl; }
+        .card { background: white; padding: 20px; border-radius: 12px; max-width: 900px; margin: 0 auto 15px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border: 1px solid #e6c594; }
+        h2 { color: #2b1b17; font-size: 20px; margin-top: 0; border-bottom: 2px solid #e6c594; padding-bottom: 8px; }
+        label { display: block; margin: 8px 0 3px; font-weight: bold; color: #3a2620; font-size: 13px; }
+        input[type="text"], input[type="number"], textarea, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-family: inherit; }
+        textarea { height: 75px; resize: vertical; }
+        input[type="file"] { width: 100%; padding: 5px; }
+        button { background: #27ae60; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background: #219150; }
+        .btn-add { background: #2980b9; margin-bottom: 15px; }
+        .btn-add:hover { background: #1f618d; }
+        .btn-delete { background: #c0392b; padding: 6px 12px; font-size: 12px; width: auto; margin-top: 5px; }
+        .btn-delete:hover { background: #a93226; }
+        .reset-btn { background: #d35400; }
+        .reset-btn:hover { background: #b9770e; }
+        a { display: inline-block; margin-bottom: 15px; color: #2b1b17; text-decoration: none; font-weight: bold; }
+        
+        .item-editor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; margin-top: 15px; }
+        .item-box { background: #faf8f5; border: 1px solid #ddd; padding: 12px; border-radius: 8px; position: relative; }
+        .item-preview { width: 100%; height: 100px; object-fit: cover; border-radius: 6px; margin-bottom: 8px; border: 1px solid #ccc; }
+
+        .slideshow-preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .slide-preview-box { text-align: center; background: #fdfbf7; padding: 10px; border-radius: 8px; border: 1px solid #e6c594; }
+        .slide-preview-box img { width: 100%; height: 90px; object-fit: cover; border-radius: 6px; margin-bottom: 5px; }
+
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(43, 27, 23, 0.85); display: flex; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .login-box { background: white; padding: 30px; border-radius: 12px; width: 320px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        #admin-panel { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- نافذة تسجيل الدخول -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2 style="color:#2b1b17; border:none;">تسجيل دخول الإدارة</h2>
+            <p style="font-size: 14px; color: #666;">يرجى إدخال كلمة المرور للوصول للوحة:</p>
+            <input type="password" id="password-input" placeholder="كلمة المرور" style="margin-bottom: 15px; padding: 10px; width:100%;">
+            <button onclick="checkPassword()" style="width:100%;">دخول</button>
+            <p id="error-msg" style="color: red; font-size: 13px; margin-top: 10px; display: none;">كلمة المرور غير صحيحة!</p>
+        </div>
+    </div>
+
+    <!-- لوحة التحكم -->
+    <div id="admin-panel">
+        <a href="index.html">← العودة إلى المنيو الرئيسي</a>
+        <h1 style="color: #2b1b17; font-size: 24px; text-align: center; margin-bottom: 20px;">لوحة التحكم الشاملة</h1>
+
+        <!-- ================= 🌟 قسم الصور المتحركة (السلايد شو) ================= -->
+        <div class="card" style="border: 2px solid #e6c594; background: #fffdf9;">
+            <h2>🌟 تغيير صور العروض والأجواء (تتغير كل 3 ثواني)</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 10px;">يمكنك اختيار صورة جديدة لكل شريحة من جهازك لتبديل العروض المتحركة في أعلى الصفحة الرئيسية:</p>
+            
+            <div class="slideshow-preview-grid">
+                <div class="slide-preview-box">
+                    <img id="prev_slide_1" src="صوره.png" onerror="this.src='mm.png'">
+                    <label>صورة العرض الأولى:</label>
+                    <input type="file" id="file-slide-1" accept="image/*" onchange="previewSlideImage(event, 'prev_slide_1')">
+                </div>
+
+                <div class="slide-preview-box">
+                    <img id="prev_slide_2" src="صوره.png" onerror="this.src='mm.png'">
+                    <label>صورة العرض الثانية:</label>
+                    <input type="file" id="file-slide-2" accept="image/*" onchange="previewSlideImage(event, 'prev_slide_2')">
+                </div>
+
+                <div class="slide-preview-box">
+                    <img id="prev_slide_3" src="صوره.png" onerror="this.src='mm.png'">
+                    <label>صورة العرض الثالثة:</label>
+                    <input type="file" id="file-slide-3" accept="image/*" onchange="previewSlideImage(event, 'prev_slide_3')">
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= قسم تعديل نصوص وصور التعريف بـ الكافيه ================= -->
+        <div class="card">
+            <h2>📝 تعديل نصوص وصور قسم "عن المطعم" والأجواء</h2>
+            
+            <label>اسم المطعم/ العنوان الرئيسي:</label>
+            <input type="text" id="site-title-input" placeholder="مثال: مون كافيه">
+
+            <div style="margin-top: 15px;">
+                <label>نص قسم "عن مون كافيه":</label>
+                <textarea id="text-about-input" placeholder="اكتب النص التعريفي للكافيه هنا..."></textarea>
+                <label>تغيير صورة "عن الكافيه":</label>
+                <input type="file" id="file-about" accept="image/*">
+            </div>
+
+            <div style="margin-top: 15px;">
+                <label>نص الخانة الإضافية (أجواء الكافيه):</label>
+                <textarea id="text-inside-input" placeholder="اكتب نص الأجواء هنا..."></textarea>
+                <label>تغيير صورة الخانة الإضافية (من الداخل):</label>
+                <input type="file" id="file-inside" accept="image/*">
+            </div>
+
+            <div style="margin-top: 15px;">
+                <label>عبارة خانة الضريبة السفلى:</label>
+                <input type="text" id="tax-text-input" placeholder="جميع الأسعار بالجنيه المصري وتشمل الضريبة والخدمة">
+            </div>
+        </div>
+
+        <!-- إضافة صنف جديد -->
+        <div class="card" style="border: 2px dashed #2980b9;">
+            <h2>➕ إضافة صنف جديد للمنيو</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label>القسم:</label>
+                    <select id="new-item-category">
+                        <option value="offers">🔥 العروض والخصومات</option>
+                        <option value="drinks">المشروبات</option>
+                        <option value="sweets">الحلويات</option>
+                        <option value="salty">الموالح</option>
+                    </select>
+                </div>
+                <div>
+                    <label>اسم الصنف:</label>
+                    <input type="text" id="new-item-name" placeholder="مثال: عرض اليوم المميز">
+                </div>
+                <div>
+                    <label>السعر (ج.م):</label>
+                    <input type="number" id="new-item-price" placeholder="75">
+                </div>
+                <div>
+                    <label>السعرات الحرارية:</label>
+                    <input type="number" id="new-item-calories" placeholder="120">
+                </div>
+            </div>
+            <label>المكونات أو تفاصيل العرض:</label>
+            <input type="text" id="new-item-desc" placeholder="اكتب تفاصيل ومكونات العرض هنا...">
+            <label>رابط الصورة أو اتركها افتراضية mm.png:</label>
+            <input type="text" id="new-item-img" placeholder="mm.png">
+            <button class="btn-add" onclick="addNewItem()" style="margin-top: 10px; width: 100%;">إضافة الصنف فوراً</button>
+        </div>
+
+        <!-- محرر العروض والخصومات -->
+        <div class="card" style="border: 2px solid #e74c3c;">
+            <h2 style="color: #c0392b; border-bottom-color: #e74c3c;">🔥 إدارة العروض والخصومات</h2>
+            <div id="offers-editor" class="item-editor-grid"></div>
+        </div>
+
+        <!-- محرر المشروبات -->
+        <div class="card">
+            <h2>☕ إدارة المشروبات</h2>
+            <div id="drinks-editor" class="item-editor-grid"></div>
+        </div>
+
+        <!-- محرر الحلويات -->
+        <div class="card">
+            <h2>🍰 إدارة الحلويات</h2>
+            <div id="sweets-editor" class="item-editor-grid"></div>
+        </div>
+
+        <!-- محرر الموالح -->
+        <div class="card">
+            <h2>🥪 إدارة الموالح</h2>
+            <div id="salty-editor" class="item-editor-grid"></div>
+        </div>
+
+        <!-- حفظ وإعادة ضبط -->
+        <div class="card">
+            <button onclick="saveAllMenuChanges()" style="width: 100%;">💾 حفظ جميع التغييرات (الصور، النصوص، والأسعار)</button>
+            <button class="reset-btn" onclick="resetAllMenuData()" style="width: 100%; margin-top: 10px;">🔄 استعادة المنيو الأصلي</button>
+        </div>
+    </div>
+
+    <script>
+        const correctPassword = "2233"; 
+
+        function checkPassword() {
+            let enteredPass = document.getElementById('password-input').value;
+            if (enteredPass === correctPassword) {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'block';
+                loadInfoTexts();
+                loadSlidePreviews();
+                loadMenuEditors();
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        }
+
+        document.getElementById('password-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkPassword();
+        });
+
+        // معاينة الصور المحفوظة للسلايد شو
+        function loadSlidePreviews() {
+            if (localStorage.getItem('saved_slide_1')) document.getElementById('prev_slide_1').src = localStorage.getItem('saved_slide_1');
+            if (localStorage.getItem('saved_slide_2')) document.getElementById('prev_slide_2').src = localStorage.getItem('saved_slide_2');
+            if (localStorage.getItem('saved_slide_3')) document.getElementById('prev_slide_3').src = localStorage.getItem('saved_slide_3');
+        }
+
+        function previewSlideImage(event, imgId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById(imgId).src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function loadInfoTexts() {
+            document.getElementById('site-title-input').value = localStorage.getItem('moon_site_title') || 'مون كافيه';
+            document.getElementById('text-about-input').value = localStorage.getItem('moon_text_about') || 'بدأ كافيه مون كافيه كفكرة جذابة لمعت في أذهان المؤسسين...';
+            document.getElementById('text-inside-input').value = localStorage.getItem('moon_text_inside') || 'استمتع بأجواء استثنائية وهادئة...';
+            document.getElementById('tax-text-input').value = localStorage.getItem('moon_tax_text') || 'جميع الأسعار بالجنيه المصري وتشمل الضريبة والخدمة';
+        }
+
+        const defaultMenuData = {
+            offers: [
+                { id: 'offer_1', name: 'عرض الثنائي الذهبي', img: 'mm.png', desc: '٢ كابتشينو + ٢ كيك شوكولاتة بسعر خاص جداً.', calories: 650, price: 180 },
+                { id: 'offer_2', name: 'كومبو الإفطار المميز', img: 'mm.png', desc: 'كرواسون أجبان + مون لاتيه التوقيع.', calories: 400, price: 120 }
+            ],
+            drinks: Array.from({length: 20}, (_, i) => ({
+                id: 'drink_' + (i + 1), name: i === 0 ? 'مون لاتيه التوقيع' : `مشروب مميز ${i + 1}`,
+                img: 'mm.png', desc: 'إسبريسو غواتيمالي، حليب طازج، سيروب الكاراميل المملح ورغوة ناعمة.',
+                calories: 150 + (i * 10), price: 65 + (i * 5)
+            })),
+            sweets: Array.from({length: 20}, (_, i) => ({
+                id: 'sweet_' + (i + 1), name: i === 0 ? 'كيكة الشوكولاتة الفاخرة' : `حلى فاخر ${i + 1}`,
+                img: 'mm.png', desc: 'كيك شوكولاتة داكنة غنية مع غناش الكاكاو البلجيكي والمكسرات.',
+                calories: 300 + (i * 15), price: 85 + (i * 5)
+            })),
+            salty: Array.from({length: 20}, (_, i) => ({
+                id: 'salty_' + (i + 1), name: i === 0 ? 'كرواسون الأجبان والتركي' : `موالح شهية ${i + 1}`,
+                img: 'mm.png', desc: 'كرواسون هشة محشوة بجبن الشيدر والموزاريلا والتركي المدخن.',
+                calories: 250 + (i * 12), price: 75 + (i * 5)
+            }))
+        };
+
+        let currentMenuData = JSON.parse(localStorage.getItem('moon_cafe_menu_data')) || defaultMenuData;
+        if (!currentMenuData.offers) currentMenuData.offers = defaultMenuData.offers;
+
+        function loadMenuEditors() {
+            renderCategoryEditor('offers-editor', currentMenuData.offers, 'offers');
+            renderCategoryEditor('drinks-editor', currentMenuData.drinks, 'drinks');
+            renderCategoryEditor('sweets-editor', currentMenuData.sweets, 'sweets');
+            renderCategoryEditor('salty-editor', currentMenuData.salty, 'salty');
+        }
+
+        function renderCategoryEditor(containerId, items, categoryKey) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            items.forEach((item, index) => {
+                const box = document.createElement('div');
+                box.className = 'item-box';
+                box.innerHTML = `
+                    <img class="item-preview" id="prev_${item.id}" src="${item.img}" onerror="this.src='mm.png'">
+                    <label>اسم الصنف:</label>
+                    <input type="text" value="${item.name}" onchange="updateItemField('${categoryKey}', ${index}, 'name', this.value)">
+                    
+                    <label>السعر (ج.م):</label>
+                    <input type="number" value="${item.price}" onchange="updateItemField('${categoryKey}', ${index}, 'price', this.value)">
+                    
+                    <label>السعرات الحرارية:</label>
+                    <input type="number" value="${item.calories}" onchange="updateItemField('${categoryKey}', ${index}, 'calories', this.value)">
+                    
+                    <label>المكونات / التفاصيل:</label>
+                    <input type="text" value="${item.desc}" onchange="updateItemField('${categoryKey}', ${index}, 'desc', this.value)">
+                    
+                    <label>رفع صورة جديدة:</label>
+                    <input type="file" accept="image/*" onchange="uploadItemImage(event, '${categoryKey}', ${index}, 'prev_${item.id}')">
+                    
+                    <button class="btn-delete" onclick="deleteItem('${categoryKey}', ${index})">🗑️ حذف الصنف</button>
+                `;
+                container.appendChild(box);
+            });
+        }
+
+        function updateItemField(cat, index, field, value) {
+            currentMenuData[cat][index][field] = value;
+        }
+
+        function uploadItemImage(event, cat, index, previewId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentMenuData[cat][index].img = e.target.result;
+                    document.getElementById(previewId).src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function deleteItem(cat, index) {
+            if (confirm("هل أنت متأكد من حذف هذا الصنف؟")) {
+                currentMenuData[cat].splice(index, 1);
+                loadMenuEditors();
+            }
+        }
+
+        function addNewItem() {
+            const cat = document.getElementById('new-item-category').value;
+            const name = document.getElementById('new-item-name').value || 'عرض / صنف جديد';
+            const price = document.getElementById('new-item-price').value || 50;
+            const calories = document.getElementById('new-item-calories').value || 100;
+            const desc = document.getElementById('new-item-desc').value || 'مكونات وطازجة وفاخرة.';
+            const img = document.getElementById('new-item-img').value || 'mm.png';
+
+            currentMenuData[cat].unshift({
+                id: cat + '_' + Date.now(),
+                name: name,
+                price: price,
+                calories: calories,
+                desc: desc,
+                img: img
+            });
+
+            alert('تمت إضافة الصنف بنجاح!');
+            loadMenuEditors();
+        }
+
+        function saveAllMenuChanges() {
+            // 1. حفظ صور السلايد شو
+            let f1 = document.getElementById('file-slide-1');
+            if (f1.files && f1.files[0]) {
+                let r = new FileReader(); r.onload = (e) => localStorage.setItem('saved_slide_1', e.target.result); r.readAsDataURL(f1.files[0]);
+            }
+            let f2 = document.getElementById('file-slide-2');
+            if (f2.files && f2.files[0]) {
+                let r = new FileReader(); r.onload = (e) => localStorage.setItem('saved_slide_2', e.target.result); r.readAsDataURL(f2.files[0]);
+            }
+            let f3 = document.getElementById('file-slide-3');
+            if (f3.files && f3.files[0]) {
+                let r = new FileReader(); r.onload = (e) => localStorage.setItem('saved_slide_3', e.target.result); r.readAsDataURL(f3.files[0]);
+            }
+
+            // 2. حفظ النصوص
+            localStorage.setItem('moon_site_title', document.getElementById('site-title-input').value);
+            localStorage.setItem('moon_text_about', document.getElementById('text-about-input').value);
+            localStorage.setItem('moon_text_inside', document.getElementById('text-inside-input').value);
+            localStorage.setItem('moon_tax_text', document.getElementById('tax-text-input').value);
+
+            // 3. حفظ صور التعريف
+            let fileAbout = document.getElementById('file-about');
+            if (fileAbout.files && fileAbout.files[0]) {
+                let r1 = new FileReader(); r1.onload = (e) => localStorage.setItem('saved_img_about', e.target.result); r1.readAsDataURL(fileAbout.files[0]);
+            }
+
+            let fileInside = document.getElementById('file-inside');
+            if (fileInside.files && fileInside.files[0]) {
+                let r2 = new FileReader(); r2.onload = (e) => localStorage.setItem('saved_img_inside', e.target.result); r2.readAsDataURL(fileInside.files[0]);
+            }
+
+            // 4. حفظ جميع الأصناف والأسعار (تتضمن العروض)
+            localStorage.setItem('moon_cafe_menu_data', JSON.stringify(currentMenuData));
+            alert('تم حفظ جميع التعديلات بنجاح!');
+        }
+
+        function resetAllMenuData() {
+            if (confirm("هل أنت متأكد من إعادة جميع الصور والنصوص والمنيو للوضع الافتراضي؟")) {
+                localStorage.clear();
+                currentMenuData = defaultMenuData;
+                loadInfoTexts();
+                loadSlidePreviews();
+                loadMenuEditors();
+                alert("تمت إعادة ضبط كل شيء بنجاح.");
+            }
+        }
+    </script>
+</body>
+</html>
